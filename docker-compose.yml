@@ -1,0 +1,53 @@
+version: '3.3'
+
+networks:
+  production-network:
+    driver: bridge
+
+services:
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: mysql
+    tty: true
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./.docker/dbdata:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=biblebawl
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=root
+    networks:
+      - production-network
+
+  frontend:
+    build:
+      dockerfile: './bible-bawl-docker/bible-bawl-frontend.dockerfile'
+      context: ../
+    image: bible-bawl/frontend
+    container_name: front
+    volumes:
+      - ./../bible-bawl-frontend/:/var/www
+      - /var/www/node_modules
+    working_dir: /var/www
+    ports:
+      - "8082:8080"
+    networks:
+      - production-network
+
+  backend:
+    build:
+      dockerfile: './bible-bawl-docker/bible-bawl-backend.dockerfile'
+      context: ../
+    image: bible-bawl/backend
+    volumes:
+      - ./../bible-bawl-backend/:/var/www
+      - /var/www/node_modules
+    ports:
+      - "3001:3001"
+    networks:
+      - production-network
+
+
